@@ -17,6 +17,7 @@
 
 # production
 /build
+!/build/icon.png
 
 # misc
 .DS_Store
@@ -31,9 +32,10 @@ yarn-error.log*
 # env files
 .env*
 
-# vercel
-.vercel
-
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# electron
+/electron/server/
+/dist-electron/

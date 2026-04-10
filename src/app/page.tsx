@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,7 +24,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Download, Loader2, RotateCcw } from "lucide-react";
+import { Download, Loader2, RotateCcw, FolderOpen, FileVideo, FileText, File, Check } from "lucide-react";
 
 interface VideoInfo {
   id: string;
@@ -39,6 +39,28 @@ interface VideoInfo {
   automatic_captions: string[];
 }
 
+interface DownloadedFile {
+  name: string;
+  size: number;
+  type: "video" | "subtitle" | "other";
+}
+
+interface DownloadResult {
+  downloadDir: string;
+  files: DownloadedFile[];
+}
+
+const fileTypeIcon = {
+  video: FileVideo,
+  subtitle: FileText,
+  other: File,
+};
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 
 function formatDuration(seconds: number): string {
   const h = Math.floor(seconds / 3600);
@@ -47,12 +69,6 @@ function formatDuration(seconds: number): string {
   if (h > 0)
     return `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   return `${m}:${s.toString().padStart(2, "0")}`;
-}
-
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 const langFallback: Record<string, string> = {
@@ -108,17 +124,8 @@ export default function Home() {
   const [subFormatTxt, setSubFormatTxt] = useState(true);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [downloadStatus, setDownloadStatus] = useState("");
+  const [completedDownload, setCompletedDownload] = useState<DownloadResult | null>(null);
   const downloadAbortRef = useRef<AbortController | null>(null);
-  const [showDeployedNotice, setShowDeployedNotice] = useState(false);
-
-  const isDeployed = useMemo(() => {
-    if (typeof window === "undefined") return false;
-    return !window.location.hostname.includes("localhost") && !window.location.hostname.includes("127.0.0.1");
-  }, []);
-
-  useEffect(() => {
-    if (isDeployed) setShowDeployedNotice(true);
-  }, [isDeployed]);
 
   const fetchInfo = async () => {
     if (!url.trim()) return;
@@ -133,8 +140,14 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: url.trim() }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      const text = await res.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error(res.ok ? "Invalid response from server" : `Server error (${res.status})`);
+      }
+      if (!res.ok) throw new Error(data.error || `Server error (${res.status})`);
       setVideoInfo(data);
       // Warn if YouTube returned incomplete data (likely IP blocked)
       if (!data.title && !data.duration) {
@@ -179,12 +192,15 @@ export default function Home() {
         signal: controller.signal,
       });
 
-      if (!res.body) throw new Error("No response body");
+      if (!res.ok || !res.body) {
+        const text = await res.text();
+        throw new Error(text || `Server error (${res.status})`);
+      }
 
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
-      let downloadResult: { downloadDir: string; files: { name: string }[] } | null = null;
+      let downloadResult: DownloadResult | null = null;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -218,19 +234,10 @@ export default function Home() {
         }
       }
 
-      // Trigger browser download for each file
       if (downloadResult && downloadResult.files.length > 0) {
-        for (const file of downloadResult.files) {
-          const fileUrl = `/api/download/${encodeURIComponent(file.name)}?dir=${encodeURIComponent(downloadResult.downloadDir)}`;
-          const link = document.createElement("a");
-          link.href = fileUrl;
-          link.download = file.name;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        }
+        setCompletedDownload(downloadResult);
       } else {
-        throw new Error("Download failed — no files were produced. YouTube may be blocking this server's IP. Try running locally instead.");
+        throw new Error("Download failed — no files were produced.");
       }
     } catch (err: unknown) {
       if (err instanceof DOMException && err.name === "AbortError") {
@@ -278,25 +285,6 @@ export default function Home() {
           </CardHeader>
 
           <CardContent className="space-y-4">
-            {/* Deployed notice */}
-            {showDeployedNotice && (
-              <div className="relative bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4 text-sm">
-                <button
-                  onClick={() => setShowDeployedNotice(false)}
-                  className="absolute top-2 right-2 text-amber-400 hover:text-amber-600 transition-colors"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                </button>
-                <p className="font-semibold text-amber-800 dark:text-amber-200 mb-1">Run locally for best results</p>
-                <p className="text-amber-700 dark:text-amber-300 text-xs leading-relaxed mb-2">
-                  YouTube blocks requests from cloud servers like Vercel. This demo may not work reliably. For full functionality, clone the repo and run locally — your home IP is not blocked.
-                </p>
-                <code className="block bg-amber-100 dark:bg-amber-900/50 rounded px-2 py-1.5 text-xs font-mono text-amber-800 dark:text-amber-200">
-                  git clone https://github.com/harrywang/ytgrabber && cd ytgrabber && pnpm install && pnpm dev
-                </code>
-              </div>
-            )}
-
             {/* URL Input */}
             <div className="flex gap-2">
               <div className="relative flex-1">
@@ -516,7 +504,8 @@ export default function Home() {
           </CardContent>
 
           <CardFooter className="flex flex-col gap-2.5 pt-0">
-            {videoInfo && !isDownloading && (
+            {/* Download button */}
+            {videoInfo && !isDownloading && !completedDownload && (
               <Button
                 onClick={handleDownload}
                 className="w-full"
@@ -527,6 +516,7 @@ export default function Home() {
               </Button>
             )}
 
+            {/* Progress */}
             {isDownloading && (
               <div className="w-full space-y-2">
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -545,8 +535,52 @@ export default function Home() {
               </div>
             )}
 
+            {/* Completed download */}
+            {completedDownload && (
+              <div className="w-full space-y-3 animate-in fade-in slide-in-from-bottom-3 duration-400">
+                <div className="flex items-center gap-2 text-sm font-medium text-green-700 dark:text-green-400">
+                  <Check className="h-4 w-4" />
+                  Saved to ~/Downloads/ytgrabber
+                </div>
+                <div className="space-y-1">
+                  {completedDownload.files.map((file) => {
+                    const Icon = fileTypeIcon[file.type];
+                    return (
+                      <div
+                        key={file.name}
+                        className="flex items-center gap-3 py-2 px-3 rounded-lg bg-muted/40 text-sm"
+                      >
+                        <Icon className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <span className="truncate flex-1">{file.name}</span>
+                        <span className="text-xs text-muted-foreground shrink-0">
+                          {formatFileSize(file.size)}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <Button
+                  onClick={() => {
+                    fetch("/api/open-folder", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ dir: completedDownload.downloadDir }),
+                    });
+                  }}
+                  className="w-full"
+                  variant="outline"
+                >
+                  <FolderOpen className="h-4 w-4" />
+                  Open in Finder
+                </Button>
+              </div>
+            )}
+
             <Button
-              onClick={resetAll}
+              onClick={() => {
+                resetAll();
+                setCompletedDownload(null);
+              }}
               className="w-full"
               variant="outline"
               disabled={isDownloading || isLoadingInfo}

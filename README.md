@@ -1,6 +1,6 @@
 # YT Grabber
 
-A web app to download YouTube videos and subtitles. Built with Next.js and [ytgrab](https://github.com/harrywang/ytgrab).
+A desktop app to download YouTube videos and subtitles. Built with Electron, Next.js, and [ytgrab](https://github.com/harrywang/ytgrab).
 
 ## Features
 
@@ -13,18 +13,14 @@ A web app to download YouTube videos and subtitles. Built with Next.js and [ytgr
 - Built-in sample YouTube URLs for quick testing
 - Cancel downloads in progress
 
-## Tech Stack
+## Install
 
-- [Next.js](https://nextjs.org/) 16 with App Router
-- [React](https://react.dev/) 19
-- [TypeScript](https://www.typescriptlang.org/) 6
-- [Tailwind CSS](https://tailwindcss.com/) 4
-- [shadcn/ui](https://ui.shadcn.com/) components
-- [ytgrab](https://github.com/harrywang/ytgrab) for YouTube downloading
+Download the latest release from the [Releases](https://github.com/harrywang/ytgrabber/releases) page:
 
-## Run Locally (Recommended)
+- **macOS**: `YTGrabber-x.x.x.dmg` (Intel) or `YTGrabber-x.x.x-arm64.dmg` (Apple Silicon)
+- **Windows**: `YTGrabber-x.x.x.exe`
 
-Running locally is the simplest and most reliable way to use YT Grabber. YouTube blocks requests from cloud/datacenter IPs, but your home IP works without any extra setup.
+## Development
 
 ```bash
 pnpm install
@@ -33,37 +29,40 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-## Deploy to Vercel (Requires YouTube Cookies)
+### Run as desktop app (dev mode)
 
-YouTube blocks datacenter IPs (Vercel, AWS, etc.) with "Sign in to confirm you're not a bot." To make the deployed version work, you need to provide your YouTube cookies:
+```bash
+pnpm build && pnpm electron:prepare && npx electron .
+```
 
-### Step 1: Export cookies from Firefox
+### Build desktop app
 
-1. Open Firefox and log in to [youtube.com](https://www.youtube.com)
-2. Install the [cookies.txt extension](https://addons.mozilla.org/en-US/firefox/addon/cookies-txt/)
-3. Go to youtube.com, click the extension icon, and export cookies for the current site
-4. Open the downloaded `cookies.txt` file and copy its entire contents
+```bash
+# macOS
+pnpm electron:build:mac
 
-> **Note:** Use Firefox, not Chrome. Chrome encrypts cookies since v127, making extraction difficult.
+# Windows
+pnpm electron:build:win
+```
 
-### Step 2: Add environment variable on Vercel
+Output goes to `dist-electron/`.
 
-1. Go to your Vercel project → Settings → Environment Variables
-2. Add a new variable:
-   - **Name:** `YOUTUBE_COOKIES`
-   - **Value:** Paste the entire contents of your `cookies.txt` file
-3. Redeploy the project
+## Tech Stack
 
-### Step 3: Refresh cookies periodically
-
-YouTube cookies expire every ~2 weeks. When downloads start failing, repeat steps 1-2 with fresh cookies.
+- [Electron](https://www.electronjs.org/) for desktop packaging
+- [Next.js](https://nextjs.org/) 16 with App Router (standalone mode)
+- [React](https://react.dev/) 19
+- [TypeScript](https://www.typescriptlang.org/) 6
+- [Tailwind CSS](https://tailwindcss.com/) 4
+- [shadcn/ui](https://ui.shadcn.com/) components
+- [ytgrab](https://github.com/harrywang/ytgrab) for YouTube downloading
 
 ## How It Works
 
 1. Paste a YouTube URL and click **Grab** to fetch video info
 2. Choose video quality (720p, 360p, 144p)
 3. Optionally enable subtitle download, pick a language and format (SRT/TXT)
-4. Click **Download** — files save directly to your browser
+4. Click **Download** — files save directly to your computer
 
 ## Credits
 

@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: "URL is required" }, { status: 400 });
     }
 
-    const downloadDir = path.join(os.tmpdir(), "ytgrabber", Date.now().toString());
+    const downloadDir = path.join(os.homedir(), "Downloads", "ytgrabber");
     fs.mkdirSync(downloadDir, { recursive: true });
 
     const encoder = new TextEncoder();

@@ -1,1 +1,1 @@
-approveBuilds: sharp,unrs-resolver
+approveBuilds: sharp,unrs-resolver,electron,electron-winstaller
