@@ -126,6 +126,10 @@ export default function Home() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setVideoInfo(data);
+      // Warn if YouTube returned incomplete data (likely IP blocked)
+      if (!data.title && !data.duration) {
+        setError("YouTube returned limited data — this server's IP may be blocked. Downloads may fail.");
+      }
       // Set default subtitle language
       const allLangs = [...(data.subtitles || []), ...(data.automatic_captions || [])];
       if (allLangs.includes("en")) {
@@ -205,7 +209,7 @@ export default function Home() {
       }
 
       // Trigger browser download for each file
-      if (downloadResult) {
+      if (downloadResult && downloadResult.files.length > 0) {
         for (const file of downloadResult.files) {
           const fileUrl = `/api/download/${encodeURIComponent(file.name)}?dir=${encodeURIComponent(downloadResult.downloadDir)}`;
           const link = document.createElement("a");
@@ -215,6 +219,8 @@ export default function Home() {
           link.click();
           document.body.removeChild(link);
         }
+      } else {
+        throw new Error("Download failed — no files were produced. YouTube may be blocking this server's IP. Try running locally instead.");
       }
     } catch (err: unknown) {
       if (err instanceof DOMException && err.name === "AbortError") {

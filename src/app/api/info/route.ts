@@ -12,7 +12,9 @@ export async function POST(request: NextRequest) {
     const yt = new YtGrab();
     const info = await yt.getInfo(url);
 
-    const subtitleData = await yt.listSubtitles(url);
+    // Subtitles and automatic_captions are already in the info object
+    const subtitles = info.subtitles || {};
+    const automaticCaptions = (info as Record<string, unknown>).automatic_captions as Record<string, unknown> || {};
 
     return NextResponse.json({
       id: info.id,
@@ -23,8 +25,8 @@ export async function POST(request: NextRequest) {
       uploader: info.uploader || info.channel,
       view_count: info.view_count,
       upload_date: info.upload_date,
-      subtitles: Object.keys(subtitleData.subtitles || {}),
-      automatic_captions: Object.keys(subtitleData.automatic_captions || {}),
+      subtitles: Object.keys(subtitles),
+      automatic_captions: Object.keys(automaticCaptions),
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Failed to fetch video info";
