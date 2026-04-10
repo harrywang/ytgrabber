@@ -22,7 +22,9 @@ A web app to download YouTube videos and subtitles. Built with Next.js and [ytgr
 - [shadcn/ui](https://ui.shadcn.com/) components
 - [ytgrab](https://github.com/harrywang/ytgrab) for YouTube downloading
 
-## Getting Started
+## Run Locally (Recommended)
+
+Running locally is the simplest and most reliable way to use YT Grabber. YouTube blocks requests from cloud/datacenter IPs, but your home IP works without any extra setup.
 
 ```bash
 pnpm install
@@ -30,6 +32,31 @@ pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
+
+## Deploy to Vercel (Requires YouTube Cookies)
+
+YouTube blocks datacenter IPs (Vercel, AWS, etc.) with "Sign in to confirm you're not a bot." To make the deployed version work, you need to provide your YouTube cookies:
+
+### Step 1: Export cookies from Firefox
+
+1. Open Firefox and log in to [youtube.com](https://www.youtube.com)
+2. Install the [cookies.txt extension](https://addons.mozilla.org/en-US/firefox/addon/cookies-txt/)
+3. Go to youtube.com, click the extension icon, and export cookies for the current site
+4. Open the downloaded `cookies.txt` file and copy its entire contents
+
+> **Note:** Use Firefox, not Chrome. Chrome encrypts cookies since v127, making extraction difficult.
+
+### Step 2: Add environment variable on Vercel
+
+1. Go to your Vercel project → Settings → Environment Variables
+2. Add a new variable:
+   - **Name:** `YOUTUBE_COOKIES`
+   - **Value:** Paste the entire contents of your `cookies.txt` file
+3. Redeploy the project
+
+### Step 3: Refresh cookies periodically
+
+YouTube cookies expire every ~2 weeks. When downloads start failing, repeat steps 1-2 with fresh cookies.
 
 ## How It Works
 

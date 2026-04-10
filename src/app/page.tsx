@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -109,6 +109,16 @@ export default function Home() {
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [downloadStatus, setDownloadStatus] = useState("");
   const downloadAbortRef = useRef<AbortController | null>(null);
+  const [showDeployedNotice, setShowDeployedNotice] = useState(false);
+
+  const isDeployed = useMemo(() => {
+    if (typeof window === "undefined") return false;
+    return !window.location.hostname.includes("localhost") && !window.location.hostname.includes("127.0.0.1");
+  }, []);
+
+  useEffect(() => {
+    if (isDeployed) setShowDeployedNotice(true);
+  }, [isDeployed]);
 
   const fetchInfo = async () => {
     if (!url.trim()) return;
@@ -268,6 +278,25 @@ export default function Home() {
           </CardHeader>
 
           <CardContent className="space-y-4">
+            {/* Deployed notice */}
+            {showDeployedNotice && (
+              <div className="relative bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4 text-sm">
+                <button
+                  onClick={() => setShowDeployedNotice(false)}
+                  className="absolute top-2 right-2 text-amber-400 hover:text-amber-600 transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+                <p className="font-semibold text-amber-800 dark:text-amber-200 mb-1">Run locally for best results</p>
+                <p className="text-amber-700 dark:text-amber-300 text-xs leading-relaxed mb-2">
+                  YouTube blocks requests from cloud servers like Vercel. This demo may not work reliably. For full functionality, clone the repo and run locally — your home IP is not blocked.
+                </p>
+                <code className="block bg-amber-100 dark:bg-amber-900/50 rounded px-2 py-1.5 text-xs font-mono text-amber-800 dark:text-amber-200">
+                  git clone https://github.com/harrywang/ytgrabber && cd ytgrabber && pnpm install && pnpm dev
+                </code>
+              </div>
+            )}
+
             {/* URL Input */}
             <div className="flex gap-2">
               <div className="relative flex-1">
