@@ -10,8 +10,8 @@ A desktop app to download YouTube videos and subtitles. Built with Electron, Nex
 - Download subtitles (manual or auto-generated) in SRT and/or plain text formats
 - Choose from 150+ subtitle languages with full language names
 - Real-time download progress bar
+- Files saved to `~/Downloads/ytgrabber/` with "Open in Finder" button
 - Built-in sample YouTube URLs for quick testing
-- Cancel downloads in progress
 
 ## Install
 
@@ -21,6 +21,8 @@ Download the latest release from the [Releases](https://github.com/harrywang/ytg
 - **Windows**: `YTGrabber-x.x.x.exe`
 
 ## Development
+
+### Run as web app
 
 ```bash
 pnpm install
@@ -35,7 +37,7 @@ Open [http://localhost:3000](http://localhost:3000).
 pnpm build && pnpm electron:prepare && npx electron .
 ```
 
-### Build desktop app
+### Build desktop app for distribution
 
 ```bash
 # macOS
@@ -46,6 +48,17 @@ pnpm electron:build:win
 ```
 
 Output goes to `dist-electron/`.
+
+### Release
+
+Push a version tag to trigger the GitHub Actions release workflow:
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+This builds macOS DMG and Windows exe, then creates a GitHub Release with the artifacts.
 
 ## Tech Stack
 
@@ -62,7 +75,8 @@ Output goes to `dist-electron/`.
 1. Paste a YouTube URL and click **Grab** to fetch video info
 2. Choose video quality (720p, 360p, 144p)
 3. Optionally enable subtitle download, pick a language and format (SRT/TXT)
-4. Click **Download** — files save directly to your computer
+4. Click **Download** — files save to `~/Downloads/ytgrabber/`
+5. Click **Open in Finder** to view downloaded files
 
 ## Credits
 
