@@ -61,6 +61,23 @@ pnpm electron:build:win
 
 Output goes to `dist-electron/`.
 
+### Code signing (macOS)
+
+The macOS build requires an Apple Developer account ($99/year). Add these secrets to the GitHub repo (Settings → Secrets → Actions):
+
+| Secret | How to get it |
+|--------|---------------|
+| `CERTIFICATE_P12` | Open Keychain Access → find your **Developer ID Application** certificate → right-click → Export → save as `.p12` → run `base64 -i certificate.p12 \| pbcopy` → paste |
+| `CERTIFICATE_PASSWORD` | The password you set when exporting the `.p12` file |
+| `APPLE_ID` | Your Apple ID email (e.g. `you@example.com`) |
+| `APPLE_TEAM_ID` | Found at [developer.apple.com/account](https://developer.apple.com/account) → Membership → Team ID |
+| `APPLE_APP_SPECIFIC_PASSWORD` | Generate at [appleid.apple.com](https://appleid.apple.com/account/manage) → Sign-In and Security → App-Specific Passwords |
+
+If you don't have a Developer ID certificate yet:
+1. Go to [developer.apple.com/account/resources/certificates](https://developer.apple.com/account/resources/certificates/list)
+2. Click **+** → select **Developer ID Application** → follow the steps
+3. Download and double-click to install in Keychain Access
+
 ### Release
 
 Push a version tag to trigger the GitHub Actions release workflow:
@@ -70,7 +87,7 @@ git tag v0.1.0
 git push origin v0.1.0
 ```
 
-This builds macOS DMG and Windows exe, then creates a GitHub Release with the artifacts.
+This builds macOS DMG (signed) and Windows exe, then creates a GitHub Release with the artifacts.
 
 ## Tech Stack
 
