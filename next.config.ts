@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "standalone",
+  ...(process.env.STANDALONE === "true" ? { output: "standalone" as const } : {}),
   outputFileTracingExcludes: {
     "*": ["./dist-electron/**", "./electron/server/**"],
   },
