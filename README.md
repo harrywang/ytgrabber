@@ -20,6 +20,18 @@ Download the latest release from the [Releases](https://github.com/harrywang/ytg
 - **macOS**: `YTGrabber-x.x.x.dmg` (Intel) or `YTGrabber-x.x.x-arm64.dmg` (Apple Silicon)
 - **Windows**: `YTGrabber-x.x.x.exe`
 
+### macOS: "Not Opened" warning
+
+Since the app is not notarized with Apple, macOS will show a warning the first time you open it. To fix this:
+
+1. Open **System Settings → Privacy & Security**
+2. Scroll down to the Security section
+3. Click **Open Anyway** next to the YTGrabber message
+4. Or run this command in Terminal:
+   ```bash
+   xattr -cr /Applications/YTGrabber.app
+   ```
+
 ## Development
 
 ### Run as web app
