@@ -138,7 +138,7 @@ function LandingPage() {
           </Button>
         </a>
 
-        <p className="text-xs text-muted-foreground/50">
+        <p className="text-xs text-muted-foreground/50 mt-3">
           Free, open-source, no ads &middot;{" "}
           <a
             href="https://github.com/harrywang/ytgrabber"
